@@ -5,6 +5,17 @@ import heapq
 
 import time
 
+import tracemalloc
+
+def start_memory_measurement():
+    tracemalloc.start()
+
+def end_memory_measurement():
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return peak
+
+
 sys.setrecursionlimit(10000) #  sets the recursion limit for Python
 pygame.init()
 pygame.display.set_caption("Sudoku")
@@ -197,6 +208,27 @@ def find_empty_cell(board, original_board=None):
                 return (i, j)
     return None
 
+def count_choices(board, row, col):
+    choices = 0
+    for num in range(1, 10):
+        if is_valid(board, num, row, col):
+            choices += 1
+    return choices
+
+def find_empty_cell_a_star(board, original_board=None):
+    if original_board is None:
+        original_board = board
+    min_choices = float('inf')
+    min_cell = None
+    for i in range(9):
+        for j in range(9):
+            if board[i][j] == 0 and original_board[i][j] == 0:
+                choices = count_choices(board, i, j)
+                if choices < min_choices:
+                    min_choices = choices
+                    min_cell = (i, j)
+    return min_cell
+
 def generate_sudoku():
     board = [[0 for _ in range(9)] for _ in range(9)]
     # Generate a random board
@@ -205,7 +237,7 @@ def generate_sudoku():
 
 board = generate_sudoku()
 
-# create a puzzle with a specific number of pre-filled cells
+# # create a puzzle with a specific number of pre-filled cells
 def remove_numbers(board, num_to_remove=30):
     # Create a list of all cells
     cells = [(i, j) for i in range(9) for j in range(9)]
@@ -229,6 +261,7 @@ def display_board(board):
 
 # DFS ==============================================
 def dfs(board):
+
     global original_board
     empty = find_empty_cell(board, original_board)
     if not empty:
@@ -243,6 +276,7 @@ def dfs(board):
     # print("Possibilities:", possibilities)  # Displays the list of possibilities
 
     for num in possibilities:
+    # for num in range(1, 10):
         if is_valid(board, num, row, col):
             board[row][col] = num
             pygame.time.wait(10)  # Adds a delay for visualization
@@ -252,12 +286,13 @@ def dfs(board):
             pygame.display.flip()  # Updates the display
 
             # display_board(board)  # Displays board status after each step
-            input("Press Enter to continue...")
+            # input("Press Enter to continue...")
 
             if dfs(board):
                 return True
             board[row][col] = 0
     return False
+
 
 def get_possibilities(board, row, col, current_number=None):
     # Returns a list of all possible numbers for a given cell
@@ -276,11 +311,66 @@ def check_for_quit():
             pygame.quit()
             sys.exit()
 
-
 # ===================================================================================================
 running = False
 selected_cell = None
-remove_numbers(board, 50)
+# remove_numbers(board, 50)
+
+# easy ===========================
+print("====== CASE EASY =======")
+board = [
+    [0, 0, 4, 0, 0, 7, 0, 0, 1],
+    [8, 7, 0, 0, 5, 0, 4, 3, 0],
+    [3, 0, 0, 6, 0, 2, 0, 0, 9],
+    [0, 6, 3, 8, 0, 0, 0, 0, 4],
+    [7, 0, 9, 1, 0, 0, 5, 0, 0],
+    [5, 8, 0, 4, 0, 0, 6, 2, 0],
+    [0, 2, 6, 0, 9, 0, 0, 0, 5],
+    [9, 0, 0, 0, 0, 4, 7, 6, 0],
+    [1, 5, 0, 2, 0, 3, 0, 0, 8]
+]
+
+# medium ============================
+# print("====== CASE MEDIUM =======")
+# board = [
+#     [8, 3, 0, 6, 0, 0, 0, 0, 7],
+#     [0, 0, 7, 0, 2, 0, 0, 5, 0],
+#     [0, 2, 1, 0, 0, 9, 0, 8, 0],
+#     [6, 0, 0, 0, 8, 0, 0, 0, 9],
+#     [0, 0, 0, 4, 6, 5, 0, 0, 0],
+#     [3, 0, 0, 0, 9, 0, 0, 0, 2],
+#     [0, 8, 0, 2, 0, 0, 3, 9, 0],
+#     [0, 5, 0, 0, 4, 0, 2, 0, 0],
+#     [2, 0, 0, 0, 0, 8, 0, 1, 6]
+# ]
+
+# hard ============================
+# print("====== CASE HARD =======")
+# board = [
+#     [1, 0, 0, 0, 3, 0, 0, 0, 0],
+#     [0, 6, 2, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 7, 0, 2, 8, 0, 4],
+#     [0, 7, 0, 1, 4, 0, 0, 0, 2],
+#     [0, 4, 0, 0, 0, 0, 0, 9, 0],
+#     [8, 0, 0, 0, 5, 6, 0, 7, 0],
+#     [6, 0, 9, 8, 0, 7, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 2, 1, 0],
+#     [0, 0, 0, 0, 6, 0, 0, 0, 9]
+# ]
+
+# evil ============================
+# board = [
+#     [0, 1, 0, 0, 0, 0, 0, 0, 6],
+#     [9, 0, 0, 2, 0, 0, 0, 0, 0],
+#     [7, 3, 2, 0, 4, 0, 0, 1, 0],
+#     [0, 4, 8, 3, 0, 0, 0, 0, 2],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [3, 0, 0, 0, 0, 4, 6, 7, 0],
+#     [0, 9, 0, 0, 3, 0, 5, 6, 8],
+#     [0, 0, 0, 0, 0, 2, 0, 0, 1],
+#     [6, 0, 0, 0, 0, 0, 0, 3, 0]
+# ]
+
 fixed_numbers = [[False for _ in range(9)] for _ in range(9)]
 for i in range(9):
     for j in range(9):
@@ -309,7 +399,7 @@ def a_star(board):
         pygame.display.flip()  # Updates the display
         if h(current_board) == 0: 
             return
-        row, col = find_empty_cell(current_board)
+        row, col = find_empty_cell_a_star(current_board)
         for num in range(1, 10):
             if is_valid(current_board,num, row, col):
                 new_board = [row[:] for row in current_board]
@@ -354,18 +444,32 @@ def game_loop():
 
                     # Measure start time
                     start_time = time.time()
+                    start_memory_measurement()
 
                     # Implement the DFS algorithm
                     dfs(board)
+
+                    peak_memory = end_memory_measurement()
+                    print("Usage Memory:", peak_memory, "bytes")
+
+                    # Measure finish time and calculate execution time
+                    end_time = time.time()
+                    execution_time = end_time - start_time
+                    print("Time to Run:", execution_time, "s")
+
+                elif button_clicked((mouse_x, mouse_y), button2_rect):
+                    running = True
+
+                    # Measure start time
+                    start_time = time.time()
+
+                    a_star(board)
 
                     # Measure finish time and calculate execution time
                     end_time = time.time()
                     execution_time = end_time - start_time
 
                     print("Thời gian thực thi:", execution_time, "giây")
-                elif button_clicked((mouse_x, mouse_y), button2_rect):
-                    running = True
-                    a_star(board)
                 else:
                     cell_row, cell_col = (
                         mouse_y // CELL_SIZE,
