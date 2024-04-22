@@ -314,7 +314,7 @@ def check_for_quit():
 # ===================================================================================================
 running = False
 selected_cell = None
-# remove_numbers(board, 50)
+remove_numbers(board, 50)
 
 # easy ===========================
 print("====== CASE EASY =======")
@@ -358,19 +358,6 @@ board = [
 #     [0, 0, 0, 0, 6, 0, 0, 0, 9]
 # ]
 
-# evil ============================
-# board = [
-#     [0, 1, 0, 0, 0, 0, 0, 0, 6],
-#     [9, 0, 0, 2, 0, 0, 0, 0, 0],
-#     [7, 3, 2, 0, 4, 0, 0, 1, 0],
-#     [0, 4, 8, 3, 0, 0, 0, 0, 2],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [3, 0, 0, 0, 0, 4, 6, 7, 0],
-#     [0, 9, 0, 0, 3, 0, 5, 6, 8],
-#     [0, 0, 0, 0, 0, 2, 0, 0, 1],
-#     [6, 0, 0, 0, 0, 0, 0, 3, 0]
-# ]
-
 fixed_numbers = [[False for _ in range(9)] for _ in range(9)]
 for i in range(9):
     for j in range(9):
@@ -386,6 +373,12 @@ for i in range(9):
 
 
 def a_star(board):
+    # Measure start time
+    start_time = time.time()
+    tracemalloc.start()  # Start tracing memory usage
+    start_memory = tracemalloc.get_traced_memory()[0]
+    
+    # Solve the sudoku
     priority_queue = [(g(board) + h(board), [row[:] for row in board])]
     while priority_queue:
         _, current_board = heapq.heappop(priority_queue)
@@ -397,7 +390,14 @@ def a_star(board):
         draw_grid()  # Redraws the grid
         check_for_quit()  # Verify if the user clicked on the close button
         pygame.display.flip()  # Updates the display
-        if h(current_board) == 0: 
+        if h(current_board) == 0:
+            # Measure finish time, memory and calculate execution time, memory use
+            end_time = time.time()
+            end_memory = tracemalloc.get_traced_memory()[0]
+            tracemalloc.stop()
+
+            print(f"Time to Run: {end_time - start_time:.2f} s")
+            print(f"Memory usage: {end_memory - start_memory} bytes")
             return
         row, col = find_empty_cell_a_star(current_board)
         for num in range(1, 10):
@@ -458,18 +458,7 @@ def game_loop():
                     print("Time to Run:", execution_time, "s")
 
                 elif button_clicked((mouse_x, mouse_y), button2_rect):
-                    running = True
-
-                    # Measure start time
-                    start_time = time.time()
-
                     a_star(board)
-
-                    # Measure finish time and calculate execution time
-                    end_time = time.time()
-                    execution_time = end_time - start_time
-
-                    print("Thời gian thực thi:", execution_time, "giây")
                 else:
                     cell_row, cell_col = (
                         mouse_y // CELL_SIZE,
@@ -500,7 +489,6 @@ def game_loop():
         draw_grid()
         draw_buttons()
         pygame.display.flip()
-
 
 game_loop()
 
